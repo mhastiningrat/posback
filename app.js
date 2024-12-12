@@ -3,6 +3,7 @@ const dotenv = require("dotenv");
 const cors = require("cors");
 const dns = require('node:dns');
 const os = require('node:os');
+const fs = require("fs");
 const bodyParser = require("body-parser")
 let PORT = process.env.APP_PORT || 9999
 dotenv.config();
@@ -29,9 +30,17 @@ async function checkConnection(){
 
 checkConnection();
 
+const uploadsDir = 'uploads';
+
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir);
+}
+
 for(let router of routes){
     app.use("/apipos/v1",router)
 }
+
+
 
 const options = { family: 4 };
 

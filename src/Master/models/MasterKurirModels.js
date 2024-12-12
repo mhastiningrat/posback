@@ -13,13 +13,13 @@ const getAllKurir = async (params) => {
 
     let data_kurir = await sqlCon(kurirQuery);
 
-    if (!data_kurir.rows) {
+    if (!data_kurir) {
         throw new Error("Data kurir tidak ditemukan");
     }
 
     return {
       error: false,
-      result: data_kurir.rows,
+      result: data_kurir,
     };
   } catch (error) {
     return {

@@ -8,7 +8,9 @@ const getAuth = async (payload) => {
     let roles_id = payload.role;
     let password = payload.password;
 
-    let query = `SELECT pa.wholesaler_no_hp 
+    let query = `SELECT pa.wholesaler_no_hp
+                 ,pa.id
+                 ,pa.profile_image
                  ,pa.username 
                  ,pa.role_id 
                  ,pa.access_menu 
@@ -26,21 +28,21 @@ const getAuth = async (payload) => {
                  LEFT JOIN grosir_pintar.wholesaler ws ON ws.phone = pa.wholesaler_no_hp
                  LEFT JOIN grosir_pintar.pos_roles pr ON pr.role_id = pa.role_id 
                  WHERE pa.wholesaler_no_hp='${no_hp}' AND pa.role_id=${roles_id}`;
-
+    console.log(query)
     let data_auth = await sqlCon(query);
 // console.log(data_auth)
-    if (data_auth.rows.length === 0) {
+    if (data_auth.length === 0) {
       throw new Error("Akun tidak di temukan");
     }
 
-    let hash_password = data_auth.rows[0].password;
+    let hash_password = data_auth[0].password;
 
     const is_valid = await bcrypt.compareSync(password, hash_password);
 
     if (is_valid) {
-      // let query = `SELECT * FROM grosir_pintar.pos_menu WHERE id IN (${data_auth.rows[0].access_menu}) ORDER BY level asc`
+      // let query = `SELECT * FROM grosir_pintar.pos_menu WHERE id IN (${data_auth[0].access_menu}) ORDER BY level asc`
       let data_access_menu = {
-        access_menu: data_auth.rows[0].access_menu,
+        access_menu: data_auth[0].access_menu,
       };
       let data_menu = await getMenu(data_access_menu);
       data_menu = data_menu.result;
@@ -48,7 +50,7 @@ const getAuth = async (payload) => {
       if (data_menu && data_menu.length > 0) {
         for (let i of data_menu) {
           let data_access_submenu = {
-            access_submenu: data_auth.rows[0].access_submenu,
+            access_submenu: data_auth[0].access_submenu,
             level: i.level,
           };
           let data_submenu = await getSubMenu(data_access_submenu);
@@ -58,16 +60,16 @@ const getAuth = async (payload) => {
             i.submenu = data_submenu;
           }
         }
-        data_auth.rows[0].menu = data_menu;
-        delete data_auth.rows[0].password;
+        data_auth[0].menu = data_menu;
+        delete data_auth[0].password;
 
         const accessToken = jwt.sign(
-          data_auth.rows[0],
+          data_auth[0],
           process.env.ACCESS_TOKEN_SECRET,
           { expiresIn: "12h" }
         );
         const refreshToken = jwt.sign(
-          data_auth.rows[0],
+          data_auth[0],
           process.env.REFRESH_TOKEN_SECRET,
           { expiresIn: "1d" }
         );
@@ -96,13 +98,13 @@ const getMenu = async (payload) => {
 
     if(access_menu) query += ` AND id IN (${access_menu})`;
 
-    query += `ORDER BY level asc`;
-
+    query += ` ORDER BY level asc`;
+    console.log(query)
     let data_menu = await sqlCon(query);
 
     return {
       error: false,
-      result: data_menu.rows,
+      result: data_menu,
     };
   } catch (error) {
     return {
@@ -127,7 +129,7 @@ const getSubMenu = async (payload) => {
 
     return {
       error: false,
-      result: data_submenu.rows,
+      result: data_submenu,
     };
   } catch (error) {
     return {
@@ -142,13 +144,13 @@ const getRoles = async () => {
     let query = `SELECT * FROM grosir_pintar.pos_roles ORDER BY role_id asc`;
 
     let data = await sqlCon(query);
-    if (data && !data.rows) {
+    if (data && !data) {
       throw new Error("Data role tidak ditemukan");
     }
 
     return {
       error: false,
-      result: data.rows,
+      result: data,
     };
   } catch (error) {
     return {
@@ -193,5 +195,7 @@ const getAllMenu = async () => {
 module.exports = {
   getAuth,
   getRoles,
-  getAllMenu
+  getAllMenu,
+  getMenu,
+  getSubMenu
 };

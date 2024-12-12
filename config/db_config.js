@@ -30,15 +30,60 @@ const sqlCon = async(query)=>{
         await client.connect();
 
         data = await client.query(query);
-
+        // console.log(data)
         client.end();
-        return data
+        if(data.command === 'UPDATE' || data.command === 'DELETE' || data.command === 'INSERT') return data.rowCount
+        
+        return data.rows
     } catch (error) {
         console.log('--- ERR CONNECTION ---');
         console.log(error.message)
+        return "Mohon maaf ada kendala sistem"
         setTimeout(()=>{
             healthCheck()
         },3000);
+    }
+}
+
+const sqlConTrx = async(query) => {
+    
+    const client = new Client(config);
+    // console.log(client)
+    
+    try {
+        // Connect to the database
+        await client.connect();
+    
+        // Start transaction
+        console.log("=== BEGIN TRANSACTION ===");
+        await client.query('BEGIN');
+    
+        for (let queryItem of query) {
+            try {
+                console.log('==== Executing Query ====');
+                console.log(queryItem);
+                await client.query(queryItem);
+                console.log('Query Executed');
+            } catch (err) {
+                console.log('Error executing query:', err.message);
+                await client.query('ROLLBACK');
+                console.log('Transaction rolled back due to error:', err.message);
+                return err.message;  // Return error message and exit
+            }
+        }
+    
+        // Commit the transaction if all queries succeed
+        await client.query('COMMIT');
+        console.log('Transaction committed');
+    } catch (error) {
+        // If there's an error during transaction setup
+        console.error("Transaction failed: ", error.message);
+        return error.message
+    } finally {
+        // Close the connection
+        console.log("Closing the connection");
+        await client.end();
+        return 'finished';
     }
 }
 
@@ -53,10 +98,12 @@ const sqlConGateway = async(query)=>{
         // console.log(data)
         // await client.release();
         client.end();
-        return data
+        if(data.command === 'UPDATE' || data.command === 'DELETE' || data.command === 'INSERT') return data.rowCount;
+        return data.rows
     } catch (error) {
         console.log('--- ERR CONNECTION ---')
         console.log(error.message)
+        return "Mohon maaf ada kendala sistem"
         setTimeout(()=>{
             healthCheck()
         },3000)
@@ -90,5 +137,6 @@ const healthCheck = async() => {
 module.exports = {
     sqlCon,
     sqlConGateway,
-    healthCheck
+    healthCheck,
+    sqlConTrx
 }

@@ -36,6 +36,7 @@ const register = async(req,res) =>{
 
 const login = async(req,res)=>{
     try {
+        // console.log("ada yang masuk")
         let body = req.body;
 
         let password = body.password;
