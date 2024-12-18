@@ -7,7 +7,7 @@ const m_getPosCustomer = async(params) => {
         let selectQuery = `SELECT * FROM  gateway.pos_customer WHERE is_deleted = '0' `
         if(keyword) selectQuery += ` AND cust_name ILIKE '%${keyword}%' OR cust_no_hp ILIKE '%${keyword}%' `
         if(cust_no) selectQuery += ` AND cust_no = '${cust_no}'`
-
+        console.log(selectQuery)
         let data_customer = await sqlConGateway(selectQuery);
 
         return {

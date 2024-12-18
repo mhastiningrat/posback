@@ -62,13 +62,13 @@ const sqlConTrx = async(query) => {
             try {
                 console.log('==== Executing Query ====');
                 console.log(queryItem);
-                await client.query(queryItem);
+                let dt = await client.query(queryItem);
                 console.log('Query Executed');
             } catch (err) {
                 console.log('Error executing query:', err.message);
                 await client.query('ROLLBACK');
                 console.log('Transaction rolled back due to error:', err.message);
-                return err.message;  // Return error message and exit
+                throw new Error(err.message);  // Return error message and exit
             }
         }
     
@@ -78,12 +78,12 @@ const sqlConTrx = async(query) => {
     } catch (error) {
         // If there's an error during transaction setup
         console.error("Transaction failed: ", error.message);
-        return error.message
+        return {error : true, message: error.message}
     } finally {
         // Close the connection
         console.log("Closing the connection");
         await client.end();
-        return 'finished';
+        // return 'finished';
     }
 }
 
