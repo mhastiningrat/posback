@@ -28,6 +28,7 @@ const M_getAllProduk = async (params) => {
                             ,p.cat_c
                             ,p.subcat_c
                             ,p.supplier
+                            ,p.calculation_type
                             ,mc.description as category 
                             ,pr.basic_price
                             ,pps.stock
@@ -37,7 +38,8 @@ const M_getAllProduk = async (params) => {
                                     'min_qty', pr.min_qty,
                                     'price', pr.price,
                                     'margin_price', pr.margin_price,
-                                    'discount', pr.discount
+                                    'discount', pr.discount,
+                                    'basic_price', pr.basic_price
                                 )
                             ) as price_details 
                             FROM grosir_pintar.product p 
@@ -54,7 +56,7 @@ const M_getAllProduk = async (params) => {
     }
 
     if (nama_produk) {
-      productQuery += ` AND p.pcode_name ILIKE '%${nama_produk}%' OR p.p_alias ILIKE '%${nama_produk}%' `;
+      productQuery += ` AND (p.pcode_name ILIKE '%${nama_produk}%' OR p.p_alias ILIKE '%${nama_produk}%') `;
     }
 
     if (kategori) {
@@ -170,7 +172,7 @@ const M_getAllPrincipal = async (params) => {
 
 const M_postStockAndPrice = async (params) => {
   try {
-    const { wholesaler_id, stock, arrayPrice, price, basic_price, modal, pcode, actor, transaction, description,supplier,allow_minus } = params;
+    const { wholesaler_id, stock, arrayPrice, price, basic_price, modal, pcode, actor, transaction, description,supplier,allow_minus,calculation_type } = params;
 
     if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
     if(!pcode) throw new Error("Produk tidak ditemukan");
@@ -203,7 +205,7 @@ const M_postStockAndPrice = async (params) => {
     let arrayQuery = [];
     console.log(data_stock);
     if (data_stock.length == 0) {
-      let updateProductQuery = `UPDATE grosir_pintar.product SET supplier='${supplier}' WHERE wholesaler_id = '${wholesaler_id}' AND pcode='${pcode}'`
+      let updateProductQuery = `UPDATE grosir_pintar.product SET calculation_type=${calculation_type}, price='${price}', basic_price='${basic_price}', modal='${modal}', supplier='${supplier}' WHERE wholesaler_id = '${wholesaler_id}' AND pcode='${pcode}'`
       let insertQuery = `INSERT INTO grosir_pintar.pos_product_stock
                         (pcode, stock, created_at, created_by, wholesaler_id,allow_minus)
                         VALUES('${pcode}', ${stock}, '${moment().format('YYYY-MM-DD HH:mm:ss')}', '${actor}', '${wholesaler_id}',${allow_minus})`;
@@ -230,7 +232,7 @@ const M_postStockAndPrice = async (params) => {
         result: result_transaction
       };
     } else {
-      let updateProductQuery = `UPDATE grosir_pintar.product SET supplier='${supplier}' WHERE wholesaler_id = '${wholesaler_id}' AND pcode='${pcode}'`
+      let updateProductQuery = `UPDATE grosir_pintar.product SET calculation_type=${calculation_type}, supplier='${supplier}' WHERE wholesaler_id = '${wholesaler_id}' AND pcode='${pcode}'`
       let updateQuery = `UPDATE grosir_pintar.pos_product_stock
                         SET stock = ${stock}, allow_minus = ${allow_minus} WHERE wholesaler_id = '${wholesaler_id}' AND pcode='${pcode}'`;
 
@@ -363,8 +365,10 @@ const M_postNewProductGrosir = async(params) => {
       ,price
       ,margin
       ,stock
+      ,allow_minus
       ,transaction
       ,description
+      ,calculation_type
       ,actor
       ,arrayPrice} = params;
 
@@ -372,7 +376,7 @@ const M_postNewProductGrosir = async(params) => {
       if(!name) throw new Error("Produk tidak sesuai");
       if(!basic_price || basic_price == 0 )throw new Error("Harga modal tidak boleh kosong");
       if(!arrayPrice || arrayPrice[0].price == '' )throw new Error("Harga jual tidak boleh kosong");
-      if(!stock || stock == 0 )throw new Error("Stok barang tidak boleh kosong");
+      if((!stock || stock == 0 ) && !allow_minus)throw new Error("Stok barang tidak boleh kosong");
 
       let valuePrice = '';
 
@@ -389,8 +393,8 @@ const M_postNewProductGrosir = async(params) => {
     
     let arrayQuery = []
     let insertProductQuery = `INSERT INTO grosir_pintar.product
-                              (wholesaler_id, pcode, pcode_name, barcode, imgtiny_url, imgbig_url, conv, uom_a, uom_b, cat_a, cat_b, cat_c, subcat_c,idx_pagination)
-                              VALUES('${wholesaler_id}', '${pcode}', '${name}', '${barcode}', '${imgtiny_url}', '${imgbig_url}', ${conv ? conv : null}, '${uom_a}', '${uom_b}', '${cat_a}', '${cat_b}', '${cat_c}', '${subcat_c}', nextval('grosir_pintar.product_idx_pagination_seq'::regclass));`
+                              (wholesaler_id, pcode, pcode_name, calculation_type, barcode, imgtiny_url, imgbig_url, conv, uom_a, uom_b, cat_a, cat_b, cat_c, subcat_c,idx_pagination)
+                              VALUES('${wholesaler_id}', '${pcode}', '${name}',${calculation_type}, '${barcode}', '${imgtiny_url}', '${imgbig_url}', ${conv ? conv : null}, '${uom_a}', '${uom_b}', '${cat_a}', '${cat_b}', '${cat_c}', '${subcat_c}', nextval('grosir_pintar.product_idx_pagination_seq'::regclass));`
     let deletePriceQuery = `DELETE FROM grosir_pintar.price WHERE wholesaler_id='${wholesaler_id}' AND pcode='${pcode}'`
     let insertPriceQuery = `INSERT INTO grosir_pintar.price
                             (wholesaler_id, pcode, price, basic_price, margin_price,min_qty,discount)
@@ -398,7 +402,7 @@ const M_postNewProductGrosir = async(params) => {
     
     let insertStockQuery = `INSERT INTO grosir_pintar.pos_product_stock
                             (wholesaler_id, pcode, stock,allow_minus,created_by,created_at)
-                            VALUES('${wholesaler_id}', '${pcode}', ${stock},true,'${actor}','${moment().format("YYYY-MM-DD HH:mm:ss")}')`
+                            VALUES('${wholesaler_id}', '${pcode}', ${stock ? stock : 0},true,'${actor}','${moment().format("YYYY-MM-DD HH:mm:ss")}')`
 
                             
 

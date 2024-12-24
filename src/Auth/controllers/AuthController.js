@@ -18,14 +18,15 @@ const register = async(req,res) =>{
         const hashPassword = await bcrypt.hashSync(password,salt);
 
         let query = `INSERT INTO grosir_pintar.pos_auth
-                    (id, wholesaler_no_hp, username, "password", session_token, last_login, role_id)
-                    VALUES(${moment().format("YYYYDDMMHHmmss")}, '${no_hp}', '${username}', '${hashPassword}', '', NOW(), ${roles})`;
+                    (wholesaler_no_hp, username, "password", session_token, last_login, role_id)
+                    VALUES('${no_hp}', '${username}', '${hashPassword}', '', NOW(), ${roles})`;
 
         await sqlCon(query);
 
-        res.json({status:'OK', message:{
-            username,password,no_hp,hashPassword
-        }})
+        response.success(res, {
+            "No.HP": no_hp,
+            "Password": password
+        });
         
     } catch (error) {
         console.log('--- ERR REGISTER ---')

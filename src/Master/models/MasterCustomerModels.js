@@ -26,8 +26,8 @@ const m_getPosCustomer = async(params) => {
 const m_addPosCustomer = async(params) => {
     try {
         const {reff_code,wholesaler_id,cust_name,cust_no_hp,cust_address,type,cust_email} = params;
-
-        let insertQuery = `INSERT INTO gateway.pos_customer (cust_name,cust_no_hp,cust_address,kode_referral) VALUES ('${cust_name}','${cust_no_hp}','${cust_address}','${reff_code ? reff_code : '-'}')`;
+        console.log(params)
+        let insertQuery = `INSERT INTO gateway.pos_customer (cust_name,cust_no_hp,cust_address,kode_referral) VALUES ('${cust_name}','${cust_no_hp?cust_no_hp:'-'}','${cust_address?cust_address:'-'}','${reff_code ? reff_code : '-'}') RETURNING *`;
 
         let data_customer = await sqlConGateway(insertQuery);
 

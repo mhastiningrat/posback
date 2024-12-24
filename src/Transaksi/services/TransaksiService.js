@@ -1,7 +1,98 @@
+const { m_addPosCustomer } = require("../../Master/models/MasterCustomerModels");
 const { m_postTransaksiJual, m_getAllCustomer, m_getGrosirPintarCustomer, m_getAllDelivery } = require("../models/TransaksiModels")
 
 const s_postTransaksiJual = async(params) =>{
+    
     try {
+
+        const {wholesaler_id,detail_order,total_belanja,data_customer} = params;
+
+        if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
+        if(detail_order.length == 0) throw new Error("Tolong lakukan pemesanan terlebih dahulu");
+
+        if(!data_customer.hasOwnProperty('cust_no')) params.customer = 'Walk In Customer';
+        else params.customer = data_customer.cust_no;
+
+        const data_user = await m_getAllCustomer(params);
+        console.log(data_user)
+
+        if(data_user.result.length == 0) {
+            params.cust_name = 'Walk In Customer';
+            const data_pos_customer = await m_addPosCustomer(params);
+            if(data_pos_customer.result.cust_no){
+                params.data_customer.cust_no = data_pos_customer.result.cust_no;
+                params.data_customer.cust_name = data_pos_customer.result.cust_name;
+            }
+        }else if(!data_user.result[0].cust_no.includes('PC')){
+            console.log('iya g ada PC nya')
+            params.cust_name = data_user.result[0].cust_name;
+            params.cust_no_hp = data_user.result[0].cust_no_hp;
+            params.cust_address = data_user.result[0].cust_address;
+            params.reff_code = data_user.result[0].cust_no;
+
+            const data_pos_customer = await m_addPosCustomer(params);
+            if(data_pos_customer.result.cust_no){
+                params.data_customer.cust_no = data_pos_customer.result.cust_no;
+                params.data_customer.cust_name = data_pos_customer.result.cust_name;
+            }
+        }
+
+        // return;
+        let total_modal = 0;
+        let total_profit = 0;
+
+        for(let a of detail_order){
+
+            let newQty = a.qty
+            let itunganHarga = 0;
+
+            if(a.calculation_type == 2){
+                for (let i of a.price_details) {
+                    if (a.qty >= i.min_qty) {
+                      itunganHarga = a.qty * i.basic_price;
+                    }
+                  }
+                  total_modal += Number(itunganHarga);
+            }else{
+                function calculateEquity(pricetag,nqty){
+                
+                    let getQty = Math.floor(nqty / pricetag.min_qty)
+                    if(getQty !== 0){
+                        console.log("newQty === "+ nqty)
+                        console.log("getQty === "+getQty)
+                        console.log("modal nih === "+total_modal)
+                        console.log("pricetag.min_qty === "+pricetag.min_qty)
+                        itunganHarga = (getQty * pricetag.min_qty) * pricetag.basic_price
+                        console.log(itunganHarga)
+                        console.log( 0 + Number(itunganHarga))
+                        console.log(typeof total_modal)
+                        console.log(typeof itunganHarga)
+                        total_modal += Number(itunganHarga)
+                        newQty -= getQty * pricetag.min_qty
+                        console.log("Formula itunganHarga === "+ getQty * pricetag.min_qty + " x  " + pricetag.basic_price)
+                        console.log("itunganHarga === "+ itunganHarga)
+                    }
+                
+                }
+    
+                let index = a.price_details.findIndex(i => i.min_qty == 1);
+                if(index == -1) a.price_details.push({min_qty:1,price:a.price_details[0].price,basic_price:a.price_details[0].basic_price});
+                
+                for(let i = a.price_details.length - 1; i >= 0; i--){
+                
+                    if(newQty >= a.price_details[i].min_qty){
+                        calculateEquity(a.price_details[i],newQty)
+                    }
+                }
+            }
+        }
+
+        console.log("total_modal === "+ total_modal)
+        total_profit = total_belanja - total_modal
+
+        params.total_modal = total_modal;
+        params.total_profit = total_profit;
+
         return await m_postTransaksiJual(params)
     } catch (error) {
         return {

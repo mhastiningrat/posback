@@ -109,13 +109,15 @@ const m_getAllDelivery = async(params) =>{
 
 const m_postTransaksiJual = async(params) => {
     try {
-
+        // return;
         // WHEN a.status=0 THEN '0-Antrian'
         // WHEN a.status=1 THEN '1-Diproses'
         // ELSE '3-Pengiriman'
 
-        const {wholesaler_id,kasir,detail_order,data_customer,kurir,delivery_method,total_belanja,voucher,id_bundle,payment_method} = params;
+        const {wholesaler_id,kasir,detail_order,data_customer,retail_id,kurir,delivery_method,total_belanja,voucher,id_bundle,payment_method,total_modal,total_profit} = params;
 
+        let insertPosCustomerGatewayQuery = `INSERT INTO gateway.pos_customer(cust_name) `
+        
         let order_no = await getSequence('auto_sales_order()');
 
         let insertOrderHeaderQuery = `INSERT INTO grosir_pintar.t_order_h (
@@ -123,11 +125,11 @@ const m_postTransaksiJual = async(params) => {
         status, order_date,order_timestamp, update_date, update_timestamp, 
         flag_received, note, app_platform,delivery_price, delivery_platform, 
         payment_method, voucher_id, voucher_price, is_delivery, id_bundle)
-        VALUES ('${wholesaler_id}','${data_customer.cust_no ? data_customer.cust_no : 'Walk in customer'}',
+        VALUES ('${wholesaler_id}','${data_customer.cust_no ? data_customer.cust_no : 'WIC'}',
         '${order_no}','${detail_order.length}',${total_belanja},3,
         '${moment().format("YYYY-MM-DD")}','${moment().format("HH:mm:ss")}','${moment().format("YYYY-MM-DD")}','${moment().format("HH:mm:ss")}',
-         0,'${data_customer.note}','POS',0,0,3,
-        ${voucher.id},${voucher.price},false,'${id_bundle?id_bundle:""}')`
+         0,'${data_customer.note?data_customer.note:""}','POS',0,0,3,
+        ${voucher.id?voucher.id:0},${voucher.price},false,'${id_bundle?id_bundle:""}')`
 
         let orderDetailValue = '';
         let updateValue = ''
@@ -135,7 +137,7 @@ const m_postTransaksiJual = async(params) => {
 
         for(let i of detail_order){
             if(orderDetailValue.length > 0) orderDetailValue+=','
-            orderDetailValue += `('${wholesaler_id}','${data_customer.cust_no ? data_customer.cust_no : 'Walk in customer'}','${order_no}',
+            orderDetailValue += `('${wholesaler_id}','${data_customer.cust_no ? data_customer.cust_no : '-'}','${order_no}',
             '${i.pcode}',${i.qty},${i.qty},${i.total_basic_price},${i.total_basic_price},0,0)`
 
             if(updateValue.length > 0) updateValue += ','
@@ -176,6 +178,27 @@ const m_postTransaksiJual = async(params) => {
         WHERE pcode = updated_data.column1
         AND wholesaler_id = '${wholesaler_id}'`
 
+        let insertTransactionLogs = `INSERT INTO grosir_pintar.pos_transaction_logs (
+        order_no,
+        wholesaler_id,
+        retail_id,
+        customer,
+        "type",
+        detail,
+        transaction_by,
+        total_transaction,
+        total_equity,
+        total_profit) 
+        VALUES (
+        '${order_no}',
+        '${wholesaler_id}',
+        '${retail_id ? retail_id : ''}',
+        '${data_customer.cust_no ? data_customer.cust_no : 'Walk in customer'}',
+        'penjualan',
+        '${JSON.stringify(detail_order)}',
+        '${kasir}',
+        ${total_belanja},${total_modal},${total_profit})`;
+
         
         arrayQuery = [];
         arrayQuery.push(insertOrderHeaderQuery);
@@ -183,20 +206,22 @@ const m_postTransaksiJual = async(params) => {
         arrayQuery.push(insertLogsOUTQuery.result);
         arrayQuery.push(initProductStockQuery);
         arrayQuery.push(updateStockQuery);
+        arrayQuery.push(insertTransactionLogs);
         
         let result_transaction = await sqlConTrx(arrayQuery);
             console.log('result_transaction')
             console.log(result_transaction)
             console.log('result_transaction')
-        if(result_transaction && result_transaction.error) throw new Error(result_transaction.message);
+        if(result_transaction !== 'finished') throw new Error(result_transaction);
+
+        
     
         return {
           error: false,
-          result: {
-            success:true
-          },
+          result: order_no,
         };
     } catch (error) {
+        console.log("lari k sini harusnya")
         return {
             error:error.message,
             result:false

@@ -49,6 +49,7 @@ const sqlConTrx = async(query) => {
     
     const client = new Client(config);
     // console.log(client)
+    const result = 'finished'
     
     try {
         // Connect to the database
@@ -68,22 +69,24 @@ const sqlConTrx = async(query) => {
                 console.log('Error executing query:', err.message);
                 await client.query('ROLLBACK');
                 console.log('Transaction rolled back due to error:', err.message);
-                throw new Error(err.message);  // Return error message and exit
+                result = err.message
+                // throw new Error(err.message);  // Return error message and exit
             }
         }
     
         // Commit the transaction if all queries succeed
         await client.query('COMMIT');
         console.log('Transaction committed');
+        
     } catch (error) {
         // If there's an error during transaction setup
         console.error("Transaction failed: ", error.message);
-        return {error : true, message: error.message}
+        // return {error : true, message: error.message}
+        // throw new Error(error.message);
+        result =  error.message
     } finally {
-        // Close the connection
-        console.log("Closing the connection");
         await client.end();
-        // return 'finished';
+        return result
     }
 }
 
@@ -98,7 +101,7 @@ const sqlConGateway = async(query)=>{
         // console.log(data)
         // await client.release();
         client.end();
-        if(data.command === 'UPDATE' || data.command === 'DELETE' || data.command === 'INSERT') return data.rowCount;
+        if(data.command === 'UPDATE' || data.command === 'DELETE' || data.command === 'INSERT') return data.rows[0];
         return data.rows
     } catch (error) {
         console.log('--- ERR CONNECTION ---')

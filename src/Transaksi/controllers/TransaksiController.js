@@ -40,7 +40,7 @@ const c_postTransaksiJual = async (req,res) => {
     if (error) {
       return response.error(res, error);
     }
-
+    
     response.success(res, result);
   } catch (error) {
     return response.errorSystem(res, error);

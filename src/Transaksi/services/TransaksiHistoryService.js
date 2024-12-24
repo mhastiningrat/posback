@@ -38,6 +38,7 @@ const s_getAllTransaksiHistoryById = async(params) => {
             const data_customer = await m_getAllCustomer(params);
 
             if(data_customer.result.length > 0){
+                console.log(data_customer.result)
                 data.data_customer = data_customer.result[0];
             }
 

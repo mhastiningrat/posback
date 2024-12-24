@@ -10,7 +10,7 @@ const m_postTransaksiReturn = async (params) => {
         // ELSE '3-Pengiriman'
         // Status 7 = Return
 
-        const {wholesaler_id,kasir,detail_order_return,data_customer,total_belanja_return,voucher,id_bundle} = params;
+        const {wholesaler_id,kasir,retail_id,detail_order_return,data_customer,total_belanja_return,voucher,id_bundle,total_modal_return} = params;
 
         let order_no = await getSequence('auto_sales_order()');
 
@@ -87,6 +87,25 @@ const m_postTransaksiReturn = async (params) => {
         WHERE order_no = updated_data.column1
         AND pcode = updated_data.column2`
 
+        let insertTransactionLogsQuery = `INSERT INTO grosir_pintar.pos_transaction_logs (
+        order_no,
+        wholesaler_id,
+        retail_id,
+        customer,
+        "type",
+        detail,
+        transaction_by,
+        total_return,total_equity) 
+        VALUES (
+        '${order_no}',
+        '${wholesaler_id}',
+        '${retail_id ? retail_id : ''}',
+        '${data_customer.cust_no ? data_customer.cust_no : 'Walk in customer'}',
+        'return',
+        '${JSON.stringify(detail_order_return)}',
+        '${kasir}',
+        ${total_belanja_return},${total_modal_return})`
+
         
         arrayQuery = [];
         arrayQuery.push(insertOrderHeaderQuery);
@@ -95,6 +114,7 @@ const m_postTransaksiReturn = async (params) => {
         arrayQuery.push(initProductStockQuery);
         arrayQuery.push(updateStockQuery);
         arrayQuery.push(updateOerderDetailQuery);
+        arrayQuery.push(insertTransactionLogsQuery);
         
         let result_transaction = await sqlConTrx(arrayQuery);
             console.log('result_transaction')

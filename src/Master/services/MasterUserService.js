@@ -9,7 +9,12 @@ const s_getMenuByUserId = async(params)=>{
         let data_menu = await getMenu({access_menu:result[0].access_menu});
 
         data_menu = data_menu.result;
-       
+
+        if(result[0].access_menu === null){
+            data_menu = [];
+            result[0].menu = [];
+        }
+
         if (data_menu && data_menu.length > 0) {
             for (let i of data_menu) {
                 let data_access_submenu = {
@@ -32,7 +37,9 @@ const s_getMenuByUserId = async(params)=>{
         for(let i of result[0].menu){
             let menuidx = all_menu.result.findIndex((a)=> a.id === i.id);
           
+            console.log(menuidx)
             if(menuidx !== -1){
+                
                 all_menu.result[menuidx].grant = true
             }else{
                 all_menu.result[menuidx].grant = false
@@ -48,6 +55,8 @@ const s_getMenuByUserId = async(params)=>{
                 }
             }
         }
+
+        // if(!result[0].access_menu) all_menu.result = [];
         return {
             error: false,
             result: all_menu.result,

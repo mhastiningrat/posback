@@ -60,7 +60,8 @@ const getAuth = async (payload) => {
             i.submenu = data_submenu;
           }
         }
-        data_auth[0].menu = data_menu;
+        if(!data_auth[0].access_menu) data_auth[0].menu = [];
+        else data_auth[0].menu = data_menu;
         delete data_auth[0].password;
 
         const accessToken = jwt.sign(
