@@ -35,6 +35,11 @@ const s_postTransaksiJual = async(params) =>{
                 params.data_customer.cust_no = data_pos_customer.result.cust_no;
                 params.data_customer.cust_name = data_pos_customer.result.cust_name;
             }
+        }else{
+            params.data_customer.cust_name = data_user.result[0].cust_name;
+            params.data_customer.cust_no_hp = data_user.result[0].cust_no_hp;
+            params.data_customer.cust_address = data_user.result[0].cust_address;
+            params.data_customer.cust_no = data_user.result[0].cust_no;
         }
 
         // return;
@@ -207,26 +212,26 @@ const s_getAllCustomer = async(params) => {
             cust_no += `'${i.cust_no}'`
         }
 
-        const data_cust_gp = await m_getGrosirPintarCustomer({cust_no:cust_no})
+        // const data_cust_gp = await m_getGrosirPintarCustomer({cust_no:cust_no})
 
-        let result_cust = [];
+        // let result_cust = [];
         
-        if(!data_cust_gp || data_cust_gp.result.length == 0){
-            result_cust = cust_gateway
+        // if(!data_cust_gp || data_cust_gp.result.length == 0){
+        //     result_cust = cust_gateway
          
-        }
-        else{
-            let cust_gp = data_cust_gp.result;
+        // }
+        // else{
+        //     let cust_gp = data_cust_gp.result;
         
-            for(let i of cust_gp){
-                let cust = cust_gateway.filter(j => j.cust_no == i.retail_id);
-                result_cust.push(cust[0]);
-            }
-        }
+        //     for(let i of cust_gp){
+        //         let cust = cust_gateway.filter(j => j.cust_no == i.retail_id);
+        //         result_cust.push(cust[0]);
+        //     }
+        // }
 
         return {
             error: false,
-            result: result_cust
+            result: cust_gateway
         }
 
     } catch (error) {

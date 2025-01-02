@@ -53,7 +53,7 @@ const m_getTransaksiHistoryById = async(params) => {
         LEFT JOIN grosir_pintar.product mp ON tod.pcode = mp.pcode AND tod.wholesaler_id = mp.wholesaler_id
         LEFT JOIN grosir_pintar.price pr ON tod.pcode = pr.pcode AND tod.wholesaler_id = pr.wholesaler_id AND (tod.amount_sales_order/tod.qty_sales_order) = pr.price
         LEFT JOIN grosir_pintar.pos_transaction_logs ptl ON tod.order_no = ptl.order_no 
-        LEFT JOIN grosir_pintar.wholesaler ws ON ptl.wholesaler_id = ws.wholesaler_id
+        LEFT JOIN grosir_pintar.pos_wholesaler ws ON ptl.wholesaler_id = ws.wholesaler_id
         WHERE tod.order_no = '${order_no}' GROUP BY ptl.transaction_by, ptl.transaction_date,ws.wholesaler_name,ws.address,ws.phone
         `
         let data = await sqlCon(selectQuery);

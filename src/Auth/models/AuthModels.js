@@ -8,13 +8,14 @@ const getAuth = async (payload) => {
     let roles_id = payload.role;
     let password = payload.password;
 
-    let query = `SELECT pa.wholesaler_no_hp
+    let query = `SELECT pa.no_hp
                  ,pa.id
                  ,pa.profile_image
                  ,pa.username 
                  ,pa.role_id 
                  ,pa.access_menu 
                  ,pa.access_submenu 
+                 ,pa.menu_permission
                  ,pa.password
                  ,pr.role 
                  ,ws.wholesaler_id 
@@ -25,9 +26,9 @@ const getAuth = async (payload) => {
                  ,ws.is_active 
                  ,ws.status_go 
                   FROM grosir_pintar.pos_auth pa 
-                 LEFT JOIN grosir_pintar.wholesaler ws ON ws.phone = pa.wholesaler_no_hp
+                 LEFT JOIN grosir_pintar.pos_wholesaler ws ON ws.wholesaler_id = pa.wholesaler_id
                  LEFT JOIN grosir_pintar.pos_roles pr ON pr.role_id = pa.role_id 
-                 WHERE pa.wholesaler_no_hp='${no_hp}' AND pa.role_id=${roles_id}`;
+                 WHERE pa.no_hp='${no_hp}'`;
     console.log(query)
     let data_auth = await sqlCon(query);
 // console.log(data_auth)
@@ -95,7 +96,7 @@ const getMenu = async (payload) => {
   try {
     const {access_menu} = payload;
 
-    let query = `SELECT * FROM grosir_pintar.pos_menu WHERE parent=0 `;
+    let query = `SELECT *,false as grant FROM grosir_pintar.pos_menu WHERE parent=0 `;
 
     if(access_menu) query += ` AND id IN (${access_menu})`;
 
@@ -120,7 +121,7 @@ const getSubMenu = async (payload) => {
     let access_submenu = payload.access_submenu;
     let level = payload.level;
 
-    let query = `SELECT * FROM grosir_pintar.pos_menu WHERE parent='${level}'`;
+    let query = `SELECT *,false as grant FROM grosir_pintar.pos_menu WHERE parent='${level}'`;
 
     if(access_submenu) query += ` AND id IN (${access_submenu}) `;
 
@@ -193,10 +194,50 @@ const getAllMenu = async () => {
   }
 };
 
+const m_getMenuPermissionById = async (params) => {
+  try {
+    const { id } = params;
+    let query = `SELECT * FROM grosir_pintar.pos_menu_permission WHERE id IN (${id})`;
+    console.log(query)
+    let data_menu_permission = await sqlCon(query);
+    
+    return {
+      error: false,
+      result: data_menu_permission,  
+    };
+  } catch (error) { 
+    return {
+      error: error.message,
+      result: false,
+    };
+  }
+};
+
+const m_getMenuPermission = async (params) => {
+  try {
+    
+    let query = `SELECT *,false as grant FROM grosir_pintar.pos_menu_permission `;
+
+    let data_menu_permission = await sqlCon(query);
+
+    return {
+      error: false,
+      result: data_menu_permission,  
+    };
+  } catch (error) { 
+    return {
+      error: error.message,
+      result: false,
+    };
+  }
+};
+
 module.exports = {
   getAuth,
   getRoles,
   getAllMenu,
   getMenu,
-  getSubMenu
+  getSubMenu,
+  m_getMenuPermissionById,
+  m_getMenuPermission
 };

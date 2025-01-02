@@ -21,7 +21,7 @@ const m_getAllCustomer = async(params) => {
         FROM gateway.customer c 
         LEFT JOIN gateway.voucher_customer vc ON c.cust_no = vc.cust_no 
         LEFT JOIN gateway.voucher_master vm ON vc.id_voucher = vm.id_voucher
-        WHERE c.cust_no ILIKE '%${customer}%' OR c.cust_name ILIKE '%${customer}%' OR c.cust_no_hp = '${customer}'`
+        WHERE (c.cust_no ILIKE '%${customer}%' OR c.cust_name ILIKE '%${customer}%' OR c.cust_no_hp = '${customer}')`
         customerGatewayQuery += ' UNION '
         customerGatewayQuery += ` SELECT 
         c.cust_no,
@@ -38,7 +38,7 @@ const m_getAllCustomer = async(params) => {
         FROM gateway.pos_customer c 
         LEFT JOIN gateway.voucher_customer vc ON c.cust_no = vc.cust_no 
         LEFT JOIN gateway.voucher_master vm ON vc.id_voucher = vm.id_voucher 
-        WHERE c.cust_no ILIKE '%${customer}%' OR c.cust_name ILIKE '%${customer}%' OR c.cust_no_hp = '${customer}'`
+        WHERE (c.cust_no ILIKE '%${customer}%' OR c.cust_name ILIKE '%${customer}%' OR c.cust_no_hp = '${customer}')`
         console.log(customerGatewayQuery)
         let data_cust_gateway = await sqlConGateway(customerGatewayQuery);
 
@@ -113,10 +113,8 @@ const m_postTransaksiJual = async(params) => {
         // WHEN a.status=0 THEN '0-Antrian'
         // WHEN a.status=1 THEN '1-Diproses'
         // ELSE '3-Pengiriman'
-
+        
         const {wholesaler_id,kasir,detail_order,data_customer,retail_id,kurir,delivery_method,total_belanja,voucher,id_bundle,payment_method,total_modal,total_profit} = params;
-
-        let insertPosCustomerGatewayQuery = `INSERT INTO gateway.pos_customer(cust_name) `
         
         let order_no = await getSequence('auto_sales_order()');
 

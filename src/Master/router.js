@@ -11,6 +11,12 @@ router.get("/master/user", masterUserController.c_getAllUser);
 router.get("/master/:id/user", masterUserController.c_getUserById);
 router.get("/master/user/:id/menu", masterUserController.c_getMenuByUserId);
 router.post("/master/user/:id/menu", masterUserController.c_updateMenuByUserId);
+router.get("/master/toko-bersama", masterUserController.c_getTokoBersama);
+router.post("/master/user/toko", masterUserController.c_insertNewUserAsToko);
+router.post("/master/user/employee", masterUserController.c_insertNewUserAsEmployee);
+router.get("/master/user/toko", masterUserController.c_getPosWholesaler);
+
+
 router.get("/master/:id/menu", masterUserController.c_getMenuById);
 router.get("/master/inventory", masterInventoryController.C_getAllProduk);
 router.get("/master/inventory/category", masterInventoryController.C_getAllProdukCategory);
@@ -32,6 +38,9 @@ router.post("/master/supplier/:code",masterSupplierController.c_updateSupplierBy
 
 router.get("/master/customer", masterCustomerController.c_getPosCustomer);
 router.post("/master/customer", masterCustomerController.c_addPosCustomer);
+
+router.get("/master/user/:id/permission", masterUserController.c_getPermissionByUserId);
+router.post("/master/user/:id/permission", masterUserController.c_updatePermissionByUserId);
     
 
 module.exports = router

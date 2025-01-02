@@ -104,7 +104,7 @@ const m_postTransaksiReturn = async (params) => {
         'return',
         '${JSON.stringify(detail_order_return)}',
         '${kasir}',
-        ${total_belanja_return},${total_modal_return})`
+        ${total_belanja_return},0)`
 
         
         arrayQuery = [];

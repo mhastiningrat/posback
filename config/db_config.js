@@ -32,7 +32,10 @@ const sqlCon = async(query)=>{
         data = await client.query(query);
         // console.log(data)
         client.end();
-        if(data.command === 'UPDATE' || data.command === 'DELETE' || data.command === 'INSERT') return data.rowCount
+        if(data.command === 'UPDATE' || data.command === 'DELETE'){
+          
+            return data.rowCount
+        } 
         
         return data.rows
     } catch (error) {

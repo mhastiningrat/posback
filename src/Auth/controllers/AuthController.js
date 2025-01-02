@@ -3,6 +3,7 @@ const moment = require("moment");
 const { sqlCon } = require("../../../config/db_config");
 const { getAuth, getAllMenu } = require("../models/AuthModels");
 const { response } = require("../../../utils/response");
+const { s_getMenuPermissionById } = require("../services/AuthService");
 const saltRounds = 9
 
 const register = async(req,res) =>{
@@ -77,8 +78,23 @@ const allMenu = async(req,res)=>{
     }
 }
 
+const c_getMenuPermissionById = async(req,res)=>{
+    try {
+        const {error,result} = await s_getMenuPermissionById(req.query);
+
+        if(error){
+            return response.error(res,error);
+        }
+
+        response.success(res,result);
+    } catch (error) {
+        return response.errorSystem(res,error);
+    }
+}
+
 module.exports={
     register,
     login,
-    allMenu
+    allMenu,
+    c_getMenuPermissionById
 }

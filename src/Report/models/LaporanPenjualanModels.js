@@ -78,8 +78,8 @@ const m_getLaporanPenjualanFromLogs = async (params) => {
         ) AS result FROM grosir_pintar.pos_transaction_logs
         WHERE wholesaler_id='${wholesaler_id}' `;
 
-        if(keyword) selectQuery += ` AND (toh.order_no ILIKE '%${keyword}%' OR toh.retail_id ILIKE '%${keyword}%')`;
-        if(start_date) selectQuery += ` AND toh.order_date >= '${start_date}' AND toh.order_date <= '${end_date}'`;
+        if(keyword) selectQuery += ` AND (order_no ILIKE '%${keyword}%' OR retail_id ILIKE '%${keyword}%')`;
+        if(start_date) selectQuery += ` AND transaction_date >= '${start_date}' AND transaction_date <= '${end_date}'`;
         // selectQuery += ` GROUP BY toh.order_no, toh.order_date, toh.status, toh.amount, toh.total_items`
 
         console.log(selectQuery)

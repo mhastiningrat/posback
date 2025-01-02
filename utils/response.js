@@ -22,6 +22,23 @@ const response = {
             message:message.message || message
         })
     }
+    ,
+    unAuthorizedPermission:(res)=>{
+        console.log(message)
+        return res.json({
+            status:'Unauthorized',
+            code:401,
+            message:"Anda tidak memiliki hak akses untuk melakukan aksi ini"
+        })
+    },
+     unAuthorizedMenu:(res,message)=>{
+        console.log(message)
+        return res.json({
+            status:'Unauthorized',
+            code:401,
+            message:"Anda tidak memiliki hak akses untuk menu ini"
+        })
+    }
 }
 
 module.exports = {

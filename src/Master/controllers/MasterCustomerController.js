@@ -3,6 +3,7 @@ const { s_getPosCustomer, s_addPosCustomer, s_updatePosCustomer } = require("../
 
 const c_getPosCustomer = async (req, res) => {
   try {
+    // console.log(req.originalUrl);
     const { error, result } = await s_getPosCustomer(req.query);
 
     if (error) {
