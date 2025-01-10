@@ -1,8 +1,23 @@
-const { m_getSupllier, m_updateSupplierById } = require("../models/MasterSupplierModels")
+const { m_getSupllier, m_updateSupplierById, m_insertNewSupplier } = require("../models/MasterSupplierModels")
 
 const s_getSupplier = async(params) => {
     try {
         return await m_getSupllier(params);
+    } catch (error) {
+        return {
+            error:error.message,
+            result:false
+        }
+    }
+}
+
+const s_insertNewSupplier = async(params) => {
+    try {
+        const {name,phone} = params;
+        if(!name) throw new Error("Nama Supplier harus diisi");
+        if(!phone) throw new Error("Nomor HP Supplier harus diisi");
+
+        return await m_insertNewSupplier(params);
     } catch (error) {
         return {
             error:error.message,
@@ -44,5 +59,6 @@ const s_updateSupplierById = async(params) => {
 
 module.exports = {
     s_getSupplier,
-    s_updateSupplierById
+    s_updateSupplierById,
+    s_insertNewSupplier
 }

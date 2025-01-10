@@ -13,7 +13,7 @@ const app = express();
 
 const {routes} = require("./src/router");
 const { healthCheck } = require('./config/db_config');
-const { verifyToken } = require('./middleware/AuthMiddleware');
+const { verifyToken, verifyPermission, verifyMenuAccess } = require('./middleware/AuthMiddleware');
 
 app.use(express.json())
 
@@ -36,9 +36,9 @@ const uploadsDir = 'uploads';
 if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir);
 }
-
+console.log(process.env.environment)
 for(let router of routes){
-  app.use("/apipos/v1",verifyToken,router)
+  app.use("/apipos/v1",verifyToken,verifyMenuAccess,router)
 }
 
 

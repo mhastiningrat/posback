@@ -4,6 +4,7 @@ const masterInventoryController = require("./controllers/MasterInventoryControll
 const masterKurirController = require("./controllers/MasterKurirController");
 const masterSupplierController = require("./controllers/MasterSupplierController");
 const masterCustomerController = require("./controllers/MasterCustomerController");
+const masterPromoController = require("./controllers/MasterPromoController");
 const { upload } = require("../../config/multer_config");
   
 
@@ -15,6 +16,8 @@ router.get("/master/toko-bersama", masterUserController.c_getTokoBersama);
 router.post("/master/user/toko", masterUserController.c_insertNewUserAsToko);
 router.post("/master/user/employee", masterUserController.c_insertNewUserAsEmployee);
 router.get("/master/user/toko", masterUserController.c_getPosWholesaler);
+router.get("/master/user/:id/permission", masterUserController.c_getPermissionByUserId);
+router.post("/master/user/:id/permission", masterUserController.c_updatePermissionByUserId);
 
 
 router.get("/master/:id/menu", masterUserController.c_getMenuById);
@@ -34,13 +37,20 @@ router.post("/master/inventory/remove/image/product",masterInventoryController.C
 router.post("/master/inventory/remove/product",masterInventoryController.C_deleteProductGrosir);
 
 router.get("/master/supplier",masterSupplierController.c_getSupplier);
+router.post("/master/supplier",masterSupplierController.c_insertSupplier);
 router.post("/master/supplier/:code",masterSupplierController.c_updateSupplierById);
 
 router.get("/master/customer", masterCustomerController.c_getPosCustomer);
 router.post("/master/customer", masterCustomerController.c_addPosCustomer);
 
-router.get("/master/user/:id/permission", masterUserController.c_getPermissionByUserId);
-router.post("/master/user/:id/permission", masterUserController.c_updatePermissionByUserId);
+router.get('/master/promo', masterPromoController.c_getAllPromo);
+router.post('/master/promo', masterPromoController.c_insertNewPromo);
+router.post('/master/:id/promo', masterPromoController.c_updatePromo);
+router.get('/master/promo/budget', masterPromoController.c_getAllPromoBudget);
+router.post('/master/promo/budget', masterPromoController.c_insertNewBudgetPromo);
+router.post('/master/promo/:id/budget', masterPromoController.c_updateBudgetPromo);
+
+
     
 
 module.exports = router

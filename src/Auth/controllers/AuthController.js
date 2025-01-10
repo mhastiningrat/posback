@@ -38,7 +38,7 @@ const register = async(req,res) =>{
 
 const login = async(req,res)=>{
     try {
-        // console.log("ada yang masuk")
+        console.log("ada yang masuk")
         let body = req.body;
 
         let password = body.password;
@@ -79,6 +79,7 @@ const allMenu = async(req,res)=>{
 }
 
 const c_getMenuPermissionById = async(req,res)=>{
+    console.log("mrene ta")
     try {
         const {error,result} = await s_getMenuPermissionById(req.query);
 

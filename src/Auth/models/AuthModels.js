@@ -68,17 +68,18 @@ const getAuth = async (payload) => {
         const accessToken = jwt.sign(
           data_auth[0],
           process.env.ACCESS_TOKEN_SECRET,
-          { expiresIn: "12h" }
-        );
-        const refreshToken = jwt.sign(
-          data_auth[0],
-          process.env.REFRESH_TOKEN_SECRET,
           { expiresIn: "1d" }
         );
+       
+
+
+        let sessionQuery = '';
+        sessionQuery = `UPDATE grosir_pintar.pos_auth SET session_token='${accessToken}' WHERE id=${data_auth[0].id}`;
+        await sqlCon(sessionQuery);
 
         return {
           error: false,
-          result: refreshToken,
+          result: accessToken,
         };
       }
     } else {
@@ -140,6 +141,29 @@ const getSubMenu = async (payload) => {
     };
   }
 };
+
+const getAllSubMenu = async (payload) => {
+  try {
+    const {access_submenu} = payload
+
+    let query = `SELECT *,false as grant FROM grosir_pintar.pos_menu WHERE id IN (${access_submenu})`;
+
+    query += ` ORDER BY level asc`
+
+    let data_submenu = await sqlCon(query);
+
+    return {
+      error: false,
+      result: data_submenu,
+    };
+  } catch (error) {
+    return {
+      error: error.message,
+      result: {},
+    };
+  }
+};
+
 
 const getRoles = async () => {
   try {
@@ -232,12 +256,32 @@ const m_getMenuPermission = async (params) => {
   }
 };
 
+const m_getAuthSession = async (params) => {
+  try {
+    const {session_token} = params;
+    let query = `SELECT * FROM grosir_pintar.pos_auth WHERE session_token='${session_token}'`;
+    console.log(query)
+    let data = await sqlCon(query);
+    return {
+      error: false,
+      result: data,
+    };
+  } catch (error) {
+    return {
+      error: error.message,
+      result: false,
+    };
+  }
+};
+
 module.exports = {
   getAuth,
   getRoles,
   getAllMenu,
   getMenu,
   getSubMenu,
+  getAllSubMenu,
   m_getMenuPermissionById,
-  m_getMenuPermission
+  m_getMenuPermission,
+  m_getAuthSession
 };

@@ -24,21 +24,30 @@ const response = {
     }
     ,
     unAuthorizedPermission:(res)=>{
-        console.log(message)
+        
         return res.json({
             status:'Unauthorized',
             code:401,
             message:"Anda tidak memiliki hak akses untuk melakukan aksi ini"
         })
     },
-     unAuthorizedMenu:(res,message)=>{
+     unAuthorizedMenu:(res)=>{
+  
+        return res.json({
+            status:'Unauthorized',
+            code:401,
+            message:"Anda tidak memiliki hak akses untuk menu ini. Silahkan menghubungi admin BERSAMA untuk akses tersebut"
+        })
+    },
+    unAuthorized:(res,message)=>{
         console.log(message)
         return res.json({
             status:'Unauthorized',
             code:401,
-            message:"Anda tidak memiliki hak akses untuk menu ini"
+            message:"Sesi anda telah habis, mohon lagin kembali"
         })
     }
+
 }
 
 module.exports = {

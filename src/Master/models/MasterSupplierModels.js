@@ -47,7 +47,28 @@ const m_updateSupplierById = async(params) =>{
     }
 }
 
+const m_insertNewSupplier = async(params) =>{
+    try {
+        const {address,is_active,name,phone} = params;
+
+        let updateQuery = `INSERT INTO grosir_pintar.pos_supplier  (name,address,phone,is_active)VALUES('${name}','${address}','${phone}',${is_active}) RETURNING *`
+
+        let data_update = await sqlCon(updateQuery);
+    
+        return {
+            error: false,
+            result: data_update,
+        };
+    } catch (error) {
+        return {
+            error: error.message,
+            result: false,
+        };
+    }
+}
+
 module.exports = {
     m_getSupllier,
-    m_updateSupplierById
+    m_updateSupplierById,
+    m_insertNewSupplier
 }

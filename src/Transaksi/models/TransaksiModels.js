@@ -55,6 +55,104 @@ const m_getAllCustomer = async(params) => {
     }
 }
 
+const m_getAllProduk = async (params) => {
+    try {
+     
+      const { wholesaler_id, kode_produk, kategori, nama_produk, page } = params;
+      
+      //wholesaler_id,pcode,pcode_name,barcode,imgtiny_url,imgbig_url,conv,uom_a,uom_b,cat_a,cat_b,cat_c,subcat_c,flag_new_item,flag_promo,order_number,calculation_type,is_active,idx_pagination,p_alias,price_status,last_update,stm_update,is_delete,p_stock,p_stock_update,odoo_ref,pcode2
+      let productQuery = `SELECT 
+                               p.wholesaler_id
+                              ,p.pcode
+                              ,p.pcode_name
+                              ,p.barcode
+                              ,p.imgtiny_url
+                              ,p.imgbig_url
+                              ,p.conv
+                              ,p.uom_a
+                              ,p.uom_b
+                              ,p.cat_a
+                              ,p.cat_b
+                              ,p.cat_c
+                              ,p.subcat_c
+                              ,p.supplier
+                              ,p.calculation_type
+                              ,mc.description as category 
+                              ,pr.basic_price
+                              ,pps.stock
+                              ,pps.allow_minus
+                              ,json_agg(
+                                  json_build_object(
+                                      'min_qty', pr.min_qty,
+                                      'price', pr.price,
+                                      'margin_price', pr.margin_price,
+                                      'discount', pr.discount,
+                                      'basic_price', pr.basic_price
+                                  )
+                              ) as price_details 
+                              FROM grosir_pintar.product p 
+                              LEFT JOIN grosir_pintar.mst_category mc ON mc.cat_a = p.cat_a
+                              LEFT JOIN grosir_pintar.pos_product_stock pps ON (p.pcode = pps.pcode AND p.wholesaler_id = pps.wholesaler_id)
+                              LEFT JOIN grosir_pintar.price pr ON (p.pcode = pr.pcode AND p.wholesaler_id = pr.wholesaler_id) `;
+  
+      if (wholesaler_id) {
+        productQuery += ` WHERE p.wholesaler_id = '${wholesaler_id}' `;
+      }
+  
+      if (kode_produk) {
+        productQuery += ` AND p.pcode = '${kode_produk}' `;
+      }
+  
+      if (nama_produk) {
+        productQuery += ` AND (p.pcode_name ILIKE '%${nama_produk}%' OR p.p_alias ILIKE '%${nama_produk}%') `;
+      }
+  
+      if (kategori) {
+        productQuery += ` AND p.cat_a = '${kategori}' `;
+      }
+  
+      productQuery += ` GROUP BY 
+                        pr.basic_price,
+                        p.wholesaler_id,
+                        p.pcode,
+                        p.pcode_name,
+                        p.barcode,
+                        p.imgtiny_url,
+                        p.imgbig_url,
+                        p.conv,
+                        p.uom_a,
+                        p.uom_b,
+                        p.cat_a,
+                        p.cat_b,
+                        p.cat_c,
+                        p.subcat_c,
+                        p.supplier,
+                        mc.description,
+                        pps.stock,
+                        pps.allow_minus `
+  
+      productQuery += ` ORDER BY p.pcode_name ASC`;
+  
+      // console.log("=== get product ===")
+      console.log(productQuery)
+      let data_product = await sqlCon(productQuery);
+  
+      if (!data_product) {
+        throw new Error("Data product tidak ditemukan");
+      }
+  
+      return {
+        error: false,
+        result: data_product,
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        result: false,
+      };
+    }
+  };
+
 const m_getGrosirPintarCustomer = async(params) => {
     try {
         const {cust_no} = params;
@@ -264,9 +362,36 @@ const insertLogStock = async(params) => {
   }
 }
 
+const m_getPromoByProduct = async(params) => {
+    try {
+      const {pcode,wholesaler_id} = params;
+  
+      let query = `SELECT * FROM grosir_pintar.pos_promo WHERE wholesaler_id='${wholesaler_id}' AND p_code = '${pcode}' 
+      AND ((NOW() BETWEEN start_date AND end_date ) OR (NOW() BETWEEN start_date AND end_date ))
+      `;
+        console.log(query)
+      let data_budget = await sqlCon(query);
+  
+      if (data_budget == "Mohon maaf ada kendala sistem")
+        throw new Error("Mohon maaf ada kendala sistem");
+  
+      return {
+        error: false,
+        result: data_budget,
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        result: false,
+      }
+    }
+  }
+
 module.exports = {
     m_getAllCustomer,
     m_getGrosirPintarCustomer,
     m_getAllDelivery,
-    m_postTransaksiJual
+    m_postTransaksiJual,
+    m_getAllProduk,
+    m_getPromoByProduct
 }

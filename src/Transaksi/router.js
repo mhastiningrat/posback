@@ -6,6 +6,8 @@ const transaksiReturnController = require("./controllers/TransaksiReturnControll
 
 
 router.get("/transaksi/customer",transaksiController.c_getAllCustomer);
+router.get("/transaksi/product",transaksiController.c_getAllProduct);
+router.get("/transaksi/:pcode/product/promo",transaksiController.c_getPromoByProduct);
 router.post("/transaksi/delivery",transaksiController.c_getAllDelivery);
 router.post("/transaksi/jual",transaksiController.c_postTransaksiJual);
 router.get("/transaksi/history",transaksiHistoryController.c_getAllTransaksiHistory);

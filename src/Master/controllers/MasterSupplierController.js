@@ -1,5 +1,5 @@
 const { response } = require("../../../utils/response");
-const { s_getSupplier, s_updateSupplierById } = require("../services/MasterSupplierService")
+const { s_getSupplier, s_updateSupplierById, s_insertNewSupplier } = require("../services/MasterSupplierService")
 
 const c_getSupplier = async(req,res) => {
     try {
@@ -29,7 +29,22 @@ const c_updateSupplierById = async(req,res) => {
     }
 }
 
+const c_insertSupplier = async(req,res) => {
+    try {
+        const {error,result} = await s_insertNewSupplier(req.body);
+
+        if (error) {
+            return response.error(res, error);
+        }
+
+        response.success(res, result);
+    } catch (error) {
+        return response.errorSystem(res, error);
+    }
+}
+
 module.exports = {
     c_getSupplier,
-    c_updateSupplierById
+    c_updateSupplierById,
+    c_insertSupplier
 }

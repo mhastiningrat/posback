@@ -1,5 +1,6 @@
 const { m_addPosCustomer } = require("../../Master/models/MasterCustomerModels");
-const { m_postTransaksiJual, m_getAllCustomer, m_getGrosirPintarCustomer, m_getAllDelivery } = require("../models/TransaksiModels")
+const { m_postTransaksiJual, m_getAllCustomer, m_getGrosirPintarCustomer, m_getAllDelivery, m_getAllProduk, m_getPromoByProduct } = require("../models/TransaksiModels");
+const { get } = require("../router");
 
 const s_postTransaksiJual = async(params) =>{
     
@@ -212,23 +213,6 @@ const s_getAllCustomer = async(params) => {
             cust_no += `'${i.cust_no}'`
         }
 
-        // const data_cust_gp = await m_getGrosirPintarCustomer({cust_no:cust_no})
-
-        // let result_cust = [];
-        
-        // if(!data_cust_gp || data_cust_gp.result.length == 0){
-        //     result_cust = cust_gateway
-         
-        // }
-        // else{
-        //     let cust_gp = data_cust_gp.result;
-        
-        //     for(let i of cust_gp){
-        //         let cust = cust_gateway.filter(j => j.cust_no == i.retail_id);
-        //         result_cust.push(cust[0]);
-        //     }
-        // }
-
         return {
             error: false,
             result: cust_gateway
@@ -242,8 +226,45 @@ const s_getAllCustomer = async(params) => {
     }
 }
 
+const s_getAllProduct = async(params) => {
+    try {
+        const {wholesaler_id} = params;
+
+        if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
+
+        return await m_getAllProduk(params);
+
+    } catch (error) {
+        return {
+            error: error.message,
+            result: false
+        }
+    }
+}
+
+const s_getPromoByProduct = async(params) => {
+    try {
+        const {wholesaler_id} = params.query;
+        const {pcode} = params.params;
+
+        if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
+
+        params.query.pcode = pcode 
+
+        return await m_getPromoByProduct(params.query);
+
+    } catch (error) {
+        return {
+            error: error.message,
+            result: false
+        }
+    }
+}
+
 module.exports = {
     s_getAllCustomer,
     s_postTransaksiJual,
-    s_getAllDelivery
+    s_getAllDelivery,
+    s_getAllProduct,
+    s_getPromoByProduct
 }
