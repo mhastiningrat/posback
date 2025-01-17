@@ -69,6 +69,8 @@ const m_insertNewPromo = async (params) => {
       voucher_code,
       voucher_amount,
       budget_source,
+      nominal_potongan,
+      maksimal_potongan,
       budget,
       action_by,
     } = params;
@@ -83,13 +85,13 @@ const m_insertNewPromo = async (params) => {
       '${principal}', '${category}', ${min_purchase ? min_purchase : 0}, ${voucher_amount}, ${is_active},
       '${moment().format(
         "YYYY-MM-DD HH:mm:ss"
-      )}','${action_by}','${type_promo}',${discount} ${voucher_code !== "" ? ", '${voucher_code}'" : ""},'${budget_source}',${budget})`;
+      )}','${action_by}','${type_promo}',${discount} ${voucher_code !== "" ? ", '${voucher_code}'" : ""},'${budget_source}',${budget},${nominal_potongan},${maksimal_potongan})`;
     }
 
     let query = `INSERT INTO grosir_pintar.pos_promo
 (wholesaler_id, "name", description, start_date, end_date, p_code, 
 principal_code, category_code, minimum_purchase, amount, is_active, 
-created_at, created_by, "type", discount ${voucher_code !== "" ? ", voucher_code" : ""},budget_id,budget)
+created_at, created_by, "type", discount ${voucher_code !== "" ? ", voucher_code" : ""},budget_id,budget,nominal_potongan)
 VALUES ${valuesQuery} RETURNING id `;
     console.log(query);
     let data_promo = await sqlCon(query);
@@ -126,6 +128,8 @@ const m_updatePromo = async (params) => {
       min_purchase,
       voucher_code,
       voucher_amount,
+      nominal_potongan,
+      maksimal_potongan,
       action_by,
     } = params;
 
@@ -143,7 +147,9 @@ const m_updatePromo = async (params) => {
     created_by = '${action_by}',
     "type" = '${type_promo}',
     discount = ${discount},
-    code_uniq = '${voucher_code}'
+    code_uniq = '${voucher_code}',
+    nominal_potongan = ${nominal_potongan},
+    maksimal_potongan = ${maksimal_potongan}
     WHERE id = '${id}' AND wholesaler_id = '${wholesaler_id}' RETURNING id `;
     console.log(query);
     let data_promo = await sqlCon(query);

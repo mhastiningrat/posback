@@ -18,6 +18,18 @@ const s_getLaporanStock = async (params) => {
     }
   };
 
+  const s_exportLaporangStock = async (params) => {
+    try {
+      return await s_getLaporanStock(params);
+    } catch (error) {
+      return {    
+        error:error.message,    
+        result:false    
+    }
+    }
+  }
+
   module.exports = {
-    s_getLaporanStock
+    s_getLaporanStock,
+    s_exportLaporangStock
   }

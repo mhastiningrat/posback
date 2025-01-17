@@ -1,5 +1,5 @@
 const { m_addPosCustomer } = require("../../Master/models/MasterCustomerModels");
-const { m_postTransaksiJual, m_getAllCustomer, m_getGrosirPintarCustomer, m_getAllDelivery, m_getAllProduk, m_getPromoByProduct } = require("../models/TransaksiModels");
+const { m_postTransaksiJual, m_getAllCustomer, m_getGrosirPintarCustomer, m_getAllDelivery, m_getAllProduk, m_getPromoByProduct, m_getPromoUsageByPromoId, m_getProductStock } = require("../models/TransaksiModels");
 const { get } = require("../router");
 
 const s_postTransaksiJual = async(params) =>{
@@ -10,6 +10,32 @@ const s_postTransaksiJual = async(params) =>{
 
         if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
         if(detail_order.length == 0) throw new Error("Tolong lakukan pemesanan terlebih dahulu");
+
+        let arrayPcode = '';
+        for(let a of detail_order){
+            if(arrayPcode.length > 0) arrayPcode += ','
+            arrayPcode += `'${a.pcode}'`;
+        }
+
+        const data_produk = await m_getProductStock({wholesaler_id:wholesaler_id,pcode:arrayPcode});
+        console.log(data_produk)    
+        let message = '';
+        for(let a of data_produk.result){
+            let produk = detail_order.find(b => b.pcode == a.pcode);
+            let qty = 0;
+            if(produk.uom == a.uom_a){
+                qty = produk.qty * conv;
+            }else{
+                qty = produk.qty;
+            }
+            if(a.stock < qty && a.allow_minus == false) {
+                message += ` stock ${a.pcode_name} tersedia  ${a.stock} ${a.description},`;
+            }
+        }
+
+        if(message.length > 0) throw new Error(message);
+
+        // return console.log(message)
 
         if(!data_customer.hasOwnProperty('cust_no')) params.customer = 'Walk In Customer';
         else params.customer = data_customer.cust_no;
@@ -244,14 +270,12 @@ const s_getAllProduct = async(params) => {
 
 const s_getPromoByProduct = async(params) => {
     try {
-        const {wholesaler_id} = params.query;
-        const {pcode} = params.params;
+        console.log(params);
+        const {wholesaler_id} = params;
 
         if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
 
-        params.query.pcode = pcode 
-
-        return await m_getPromoByProduct(params.query);
+        return await m_getPromoByProduct(params);
 
     } catch (error) {
         return {
@@ -261,10 +285,70 @@ const s_getPromoByProduct = async(params) => {
     }
 }
 
+const s_getPromoUsageByPromoId = async(params)=>{
+    try {
+        
+        const {wholesaler_id} = params;
+
+        if(!wholesaler_id) throw new Error("Grosir tidak ditemukan");
+
+
+        const {error,result} =  await m_getPromoUsageByPromoId(params);
+
+        return {
+            error:false,
+            result
+        }
+    } catch (error) {
+        
+    }
+}
+
+const s_validateOrder = async(params) => {
+    try {
+        const {detail_order,wholesaler_id} = params; 
+        
+        let arrayPromoId = [];
+        let promo_usage = [];
+        
+        for(let a of detail_order){
+            let dataPromo = await m_getPromoByProduct({wholesaler_id:wholesaler_id,pcode:a.pcode});
+            if(dataPromo.result && dataPromo.result.length > 0){
+                let resultPromo = dataPromo.result;
+                for(let i of resultPromo){
+                    arrayPromoId.push(`'${i.id}'`);
+                }
+                a.promo = resultPromo;
+            }
+        }
+
+        if(arrayPromoId.length > 0){
+            const dataPromoUsage = await m_getPromoUsageByPromoId({wholesaler_id:wholesaler_id,promo_id:arrayPromoId});
+
+            if(dataPromoUsage.result && dataPromoUsage.result.length > 0){
+                let resultUsage = dataPromoUsage.result;
+                promo_usage = resultUsage;
+            }
+        }
+
+        return {
+            error:false,
+            result:{detail_order,promo_usage}
+        }
+        
+    } catch (error) {
+        return  {
+            error:error.message,
+            result:false
+        }
+    }
+}
+
 module.exports = {
     s_getAllCustomer,
     s_postTransaksiJual,
     s_getAllDelivery,
     s_getAllProduct,
-    s_getPromoByProduct
+    s_getPromoByProduct,
+    s_validateOrder
 }

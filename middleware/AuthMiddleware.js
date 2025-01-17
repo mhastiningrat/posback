@@ -4,10 +4,11 @@ const { response } = require('../utils/response');
 
 
 const verifyToken = async(req,res,next) => {
+    console.log(req)
     try {
        console.log(req.originalUrl);
   
-       if(req.originalUrl.includes('auth') || req.headers.pathname.includes('auth') || req.headers.pathname.includes('print')) {
+       if(req.originalUrl.includes('auth') || req.originalUrl.includes('export') || req.headers.pathname.includes('auth') || req.headers.pathname.includes('print')) {
             return next();
        }
        let authorization = req.headers.authorization;
@@ -43,7 +44,8 @@ const verifyToken = async(req,res,next) => {
 }
 
 const verifyMenuAccess = async (req,res,next) => {
-    if(req.originalUrl.includes('auth') || req.headers.pathname.includes('auth') || req.headers.pathname.includes('print')) {
+    console.log(req)
+    if(req.originalUrl.includes('auth') || req.originalUrl.includes('export') || req.headers.pathname.includes('auth') || req.headers.pathname.includes('print')) {
         return next();
     }
     try {

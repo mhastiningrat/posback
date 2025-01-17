@@ -205,6 +205,29 @@ const m_getAllDelivery = async(params) =>{
     }
 }
 
+const m_getProductStock = async(params) => {
+  try {
+    const {wholesaler_id,pcode} = params;
+
+    let query = `SELECT pps.*,p.pcode_name,p.conv,p.uom_a,mu.description FROM grosir_pintar.pos_product_stock pps 
+    left join grosir_pintar.product p on (p.pcode=pps.pcode and p.wholesaler_id=pps.wholesaler_id)
+    left join grosir_pintar.mst_uom mu on mu.uom = p.uom_b 
+    WHERE pps.wholesaler_id='${wholesaler_id}' AND pps.pcode IN (${pcode})`;
+
+    let data_stock = await sqlCon(query);
+
+    return {
+      error:false,
+      result:data_stock
+    }
+  } catch (error) {
+    return{
+      error:error.message,
+      result:false
+    }
+  }
+}
+
 const m_postTransaksiJual = async(params) => {
     try {
         // return;
@@ -212,7 +235,7 @@ const m_postTransaksiJual = async(params) => {
         // WHEN a.status=1 THEN '1-Diproses'
         // ELSE '3-Pengiriman'
         
-        const {wholesaler_id,kasir,detail_order,data_customer,retail_id,kurir,delivery_method,total_belanja,voucher,id_bundle,payment_method,total_modal,total_profit} = params;
+        const {wholesaler_id,kasir,detail_order,data_customer,retail_id,kurir,delivery_method,total_belanja,voucher,id_bundle,payment_method,total_modal,total_profit,data_promo} = params;
         
         let order_no = await getSequence('auto_sales_order()');
 
@@ -230,6 +253,7 @@ const m_postTransaksiJual = async(params) => {
         let orderDetailValue = '';
         let updateValue = ''
         let insertStockValue = ''
+        let insertPromoUsageValue = '';
 
         for(let i of detail_order){
             if(orderDetailValue.length > 0) orderDetailValue+=','
@@ -295,6 +319,15 @@ const m_postTransaksiJual = async(params) => {
         '${kasir}',
         ${total_belanja},${total_modal},${total_profit})`;
 
+
+        for(let i of data_promo){
+            if(insertPromoUsageValue.length > 0) insertPromoUsageValue += ','
+            insertPromoUsageValue += `('${wholesaler_id}','${i.promo_id}',${i.amount},'${order_no}','${i.pcode}')`
+        }
+
+        let insertPromoUsageQuery = `INSERT INTO grosir_pintar.pos_promo_usage (wholesaler_id, promo_id, total_amount, order_no,pcode)
+        VALUES ${insertPromoUsageValue}`;
+
         
         arrayQuery = [];
         arrayQuery.push(insertOrderHeaderQuery);
@@ -303,6 +336,7 @@ const m_postTransaksiJual = async(params) => {
         arrayQuery.push(initProductStockQuery);
         arrayQuery.push(updateStockQuery);
         arrayQuery.push(insertTransactionLogs);
+        arrayQuery.push(insertPromoUsageQuery);
         
         let result_transaction = await sqlConTrx(arrayQuery);
             console.log('result_transaction')
@@ -366,10 +400,40 @@ const m_getPromoByProduct = async(params) => {
     try {
       const {pcode,wholesaler_id} = params;
   
-      let query = `SELECT * FROM grosir_pintar.pos_promo WHERE wholesaler_id='${wholesaler_id}' AND p_code = '${pcode}' 
+      let query = `SELECT * FROM grosir_pintar.pos_promo WHERE wholesaler_id='${wholesaler_id}' AND p_code = '${pcode}' AND is_active = true  
       AND ((NOW() BETWEEN start_date AND end_date ) OR (NOW() BETWEEN start_date AND end_date ))
       `;
         console.log(query)
+      let data_budget = await sqlCon(query);
+  
+      if (data_budget == "Mohon maaf ada kendala sistem")
+        throw new Error("Mohon maaf ada kendala sistem");
+  
+      return {
+        error: false,
+        result: data_budget,
+      };
+    } catch (error) {
+      return {
+        error: error.message,
+        result: false,
+      }
+    }
+  }
+
+
+const m_getPromoUsageByPromoId = async(params) => {
+    try {
+      const {promo_id,wholesaler_id} = params;
+  
+      let query = `SELECT SUM(total_amount) as amount, promo_id FROM grosir_pintar.pos_promo_usage WHERE wholesaler_id='${wholesaler_id}'`;
+
+      if(typeof promo_id == 'string') query += ` AND promo_id = '${promo_id}'`;
+      if(typeof promo_id == 'object') query += ` AND promo_id IN (${promo_id})`;
+
+      query += ` GROUP BY promo_id`;
+
+      console.log(query)
       let data_budget = await sqlCon(query);
   
       if (data_budget == "Mohon maaf ada kendala sistem")
@@ -393,5 +457,7 @@ module.exports = {
     m_getAllDelivery,
     m_postTransaksiJual,
     m_getAllProduk,
-    m_getPromoByProduct
+    m_getPromoByProduct,
+    m_getPromoUsageByPromoId,
+    m_getProductStock
 }

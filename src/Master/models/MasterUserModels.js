@@ -220,11 +220,11 @@ const m_getPosWholesaler = async(params) => {
 
 const m_insertNewUserAsToko = async(params) =>{
   try {
-    const{reff_id,owner,nama_toko,no_hp_toko,alamat_toko} = params;
+    const{reff_id,owner,nama_toko,no_hp_toko,alamat_toko,img_profile} = params;
 
     let query = `INSERT INTO grosir_pintar.pos_wholesaler
-    (wholesaler_name, address, phone, "owner",reference_code)
-    VALUES('${nama_toko}', '${alamat_toko}', '${no_hp_toko}', '${owner}', '${reff_id?reff_id:'-'}') RETURNING *`
+    (wholesaler_name, address, phone, "owner",reference_code,profile_img_url)
+    VALUES('${nama_toko}', '${alamat_toko}', '${no_hp_toko}', '${owner}', '${reff_id?reff_id:'-'}','${img_profile}') RETURNING *`
 
     const data = await sqlCon(query);
     if(data == 'Mohon maaf ada kendala sistem') throw new Error(data);

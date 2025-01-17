@@ -1,4 +1,4 @@
-const { uploadImageToS3 } = require("../../../utils/AWS");
+const { uploadImageToS3, removeImageFromS3 } = require("../../../utils/AWS");
 const { response } = require("../../../utils/response");
 const { s_updatePhotoProfile } = require("../services/AccountService");
 
@@ -37,7 +37,24 @@ const c_updatePhotoProfile = async(req,res) => {
     }
 }
 
+const c_removePhotoProfileImage = async(req,res) =>{
+  try {
+
+    const {error,result} = await removeImageFromS3(req.body);
+
+    if (error) {
+      return response.error(res, error);
+    }
+
+    response.success(res, result);
+  } catch (error) {
+    console.log(error.message)
+    return response.errorSystem(res, error);
+  }
+}
+
 module.exports = {
     c_uploadPhotoProfile,
-    c_updatePhotoProfile
+    c_updatePhotoProfile,
+    c_removePhotoProfileImage
 }

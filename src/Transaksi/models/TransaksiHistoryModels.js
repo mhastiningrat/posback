@@ -54,8 +54,9 @@ const m_getTransaksiHistoryById = async(params) => {
         LEFT JOIN grosir_pintar.price pr ON tod.pcode = pr.pcode AND tod.wholesaler_id = pr.wholesaler_id AND (tod.amount_sales_order/tod.qty_sales_order) = pr.price
         LEFT JOIN grosir_pintar.pos_transaction_logs ptl ON tod.order_no = ptl.order_no 
         LEFT JOIN grosir_pintar.pos_wholesaler ws ON ptl.wholesaler_id = ws.wholesaler_id
-        WHERE tod.order_no = '${order_no}' GROUP BY ptl.transaction_by, ptl.transaction_date,ws.wholesaler_name,ws.address,ws.phone
-        `
+        WHERE tod.order_no = '${order_no}' GROUP BY ptl.transaction_by, ptl.transaction_date,ws.wholesaler_name,ws.address,ws.phone,tod.order_no
+        `;
+
         let data = await sqlCon(selectQuery);
 
         return {    
@@ -70,8 +71,33 @@ const m_getTransaksiHistoryById = async(params) => {
     }
 }
 
+const m_getPromoUsageByOrderId = async(params) => {
+    try {
+
+        const {order_no,pcode} = params;
+
+        let query = `SELECT pp.type,pp.id,ppu.total_amount FROM grosir_pintar.pos_promo_usage ppu 
+        LEFT JOIN grosir_pintar.pos_promo pp ON pp.id = ppu.promo_id
+        WHERE ppu.order_no = '${order_no}' AND ppu.pcode = '${pcode}'`
+        console.log(query)
+        let data = await sqlCon(query);
+
+        return {    
+            error: false,    
+            result: data,      
+        };
+        
+    } catch (error) {
+        return {
+            error: error.message,
+            result: false
+        }
+    }
+}
+
 
 module.exports = {
     m_getAllTransaksiHistory,
-    m_getTransaksiHistoryById
+    m_getTransaksiHistoryById,
+    m_getPromoUsageByOrderId
 }

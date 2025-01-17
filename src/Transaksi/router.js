@@ -10,6 +10,7 @@ router.get("/transaksi/product",transaksiController.c_getAllProduct);
 router.get("/transaksi/:pcode/product/promo",transaksiController.c_getPromoByProduct);
 router.post("/transaksi/delivery",transaksiController.c_getAllDelivery);
 router.post("/transaksi/jual",transaksiController.c_postTransaksiJual);
+router.post("/transaksi/validate-order",transaksiController.c_validateOrder);
 router.get("/transaksi/history",transaksiHistoryController.c_getAllTransaksiHistory);
 router.get("/transaksi/:order_no/history",transaksiHistoryController.c_getAllTransaksiHistoryById);
 
